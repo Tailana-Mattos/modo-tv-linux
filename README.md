@@ -231,12 +231,6 @@ A versão pública ainda não foi validada em outros computadores.
 
 ---
 
-## Segurança e privacidade
-
-Os exemplos publicados não devem conter senhas, tokens, dados pessoais ou configurações privadas.
-
-O controle remoto envolve comandos que interagem com o sistema operacional. Qualquer implementação que permita acesso pela rede deve incluir mecanismos adequados de autenticação e proteção da comunicação.
-
 ## Competências demonstradas
 
 - Análise e resolução de problemas técnicos.
