@@ -102,6 +102,7 @@ Este repositório apresenta um estudo de caso do Modo TV Linux, com explicaçõe
 - [01 — Gerenciamento de monitores no GNOME com Wayland](docs/01-gerenciamento-monitores.md)
 - [02 — Automação de áudio HDMI no Linux](docs/02-gerenciamento-audio.md)
 - [03 — Arquitetura e integração entre Python e Bash](docs/03-arquitetura-integracao.md)
+- [04 — Desafios técnicos e soluções adotadas](docs/04-desafios-tecnicos-e-solucoes.md)
 
 Os guias demonstram os desafios enfrentados, as ferramentas utilizadas e as decisões técnicas adotadas.
 
