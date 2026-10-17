@@ -1,0 +1,100 @@
+#!/bin/bash
+MODO_TV_PORT="$(python3 "$(dirname "${BASH_SOURCE[0]}")/ler-config.py" server.port)" || exit 1
+
+set -u
+
+APP="${1:-}"
+JELLYFIN_SERVER="${2:-primary}"
+
+case "$APP" in
+    youtube)
+        URL="https://www.youtube.com/"
+        ACTIVE_NAME="freetube"
+        ;;
+    netflix)
+        URL="https://www.netflix.com/"
+        ACTIVE_NAME="netflix"
+        ;;
+    prime)
+        URL="https://www.primevideo.com/"
+        ACTIVE_NAME="prime"
+        ;;
+
+    disney)
+        URL="https://www.disneyplus.com/pt-br"
+        ACTIVE_NAME="disney"
+        ;;
+    jellyfin)
+        case "$JELLYFIN_SERVER" in
+            secondary)
+                CHAVE="services.jellyfin_secondary_url"
+                ;;
+            *)
+                CHAVE="services.jellyfin_primary_url"
+                ;;
+        esac
+        URL="$(python3 "$(dirname "$0")/ler-config.py" "$CHAVE")" || exit 1
+        [ -n "$URL" ] || { echo "Configure o endereço do Jellyfin"; exit 1; }
+        if [ "$JELLYFIN_SERVER" = "secondary" ]; then
+            ACTIVE_NAME="jellyfin_secondary"
+        else
+            ACTIVE_NAME="jellyfin_primary"
+        fi
+        ;;
+    iptv)
+        URL="$(python3 "$(dirname "$0")/ler-config.py" services.iptv_url)" || exit 1
+        [ -n "$URL" ] || { echo "Configure o endereço do IPTV"; exit 1; }
+        ACTIVE_NAME="iptv"
+        ;;
+    *)
+        echo "Aplicativo desconhecido: $APP"
+        exit 1
+        ;;
+esac
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+FLATPAK_ID="com.vivaldi.Vivaldi"
+PROFILE="$HOME/.var/app/$FLATPAK_ID/config/modo-tv-publico-webapps/${ACTIVE_NAME}"
+LOG="$SCRIPT_DIR/dados-publicos/cache/modo-tv-vivaldi-$APP-gnome.log"
+
+mkdir -p "$PROFILE" "$SCRIPT_DIR/dados-publicos/cache"
+
+# No GNOME mantemos apenas um Web App Vivaldi aberto.
+# TERM permite que o navegador grave o perfil antes de sair.
+# Encerra somente processos Vivaldi associados aos perfis do Modo TV.
+while IFS= read -r pid; do
+    [[ "$pid" =~ ^[0-9]+$ ]] || continue
+    [ "$pid" -gt 1 ] || continue
+    [ -r "/proc/$pid/cmdline" ] || continue
+
+    cmdline="$(tr '\0' ' ' < "/proc/$pid/cmdline")"
+
+    if [[ "$cmdline" == *vivaldi* ]] &&
+       [[ "$cmdline" == *"/modo-tv-publico-webapps/"* ]]; then
+        kill -TERM "$pid" 2>/dev/null || true
+    fi
+done < <(pgrep -u "$(id -u)" -f 'modo-tv-publico-webapps/' || true)
+sleep 1
+
+nohup flatpak run "$FLATPAK_ID" \
+    --user-data-dir="$PROFILE" \
+    --password-store=basic \
+    --app="$URL" \
+    --start-fullscreen \
+    >"$LOG" 2>&1 &
+
+for _ in $(seq 1 60); do
+    if pgrep -af "$PROFILE" >/dev/null 2>&1; then
+        curl -fsS \
+            "http://127.0.0.1:${MODO_TV_PORT}/activate?app=$ACTIVE_NAME" \
+            >/dev/null 2>&1 || true
+        exit 0
+    fi
+    sleep 0.25
+done
+
+curl -fsS \
+    "http://127.0.0.1:${MODO_TV_PORT}/activate?app=home" \
+    >/dev/null 2>&1 || true
+
+exit 1

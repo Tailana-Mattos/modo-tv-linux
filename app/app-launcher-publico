@@ -1,0 +1,50 @@
+#!/bin/bash
+
+APP="${1:-}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+case "$APP" in
+
+    freetube)
+        exec "$SCRIPT_DIR/show-vivaldi-webapp-publico" youtube
+        ;;
+
+
+    jellyfin|jellyfin_primary)
+        exec "$SCRIPT_DIR/show-vivaldi-webapp-publico" jellyfin primary
+        ;;
+
+    jellyfin_secondary)
+        exec "$SCRIPT_DIR/show-vivaldi-webapp-publico" jellyfin secondary
+        ;;
+
+    netflix)
+        exec "$SCRIPT_DIR/show-vivaldi-webapp-publico" netflix
+        ;;
+
+    prime)
+        exec "$SCRIPT_DIR/show-vivaldi-webapp-publico" prime
+        ;;
+
+    disney)
+        exec "$SCRIPT_DIR/show-vivaldi-webapp-publico" disney
+        ;;
+
+    spotify)
+        exec "$SCRIPT_DIR/show-spotify-gnome-publico"
+        ;;
+
+
+    firefox)
+        exec "$SCRIPT_DIR/show-chromium-gnome-publico"
+        ;;
+
+    iptv)
+        exec "$SCRIPT_DIR/show-vivaldi-webapp-publico" iptv
+        ;;
+
+    *)
+        echo "Aplicativo desconhecido: $APP"
+        exit 1
+        ;;
+esac

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Modo TV atual:
+# a AOC é a única saída gráfica ativa.
+#
+# Antigamente este script empurrava o cursor até X >= 2328
+# para atravessar do LG para a TV.
+# Isso não existe mais no modo de tela única.
+#
+# O ponteiro já está necessariamente dentro da saída ativa.
+# Os movimentos reais continuam sendo feitos pela rota /mouse.
+
+exit 0

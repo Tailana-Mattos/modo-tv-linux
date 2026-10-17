@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modo TV</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    color: white;
+    font-family: system-ui, sans-serif;
+    background: #07090d;
+}
+
+body {
+    position: relative;
+    background:
+        radial-gradient(circle at 70% 20%, #394b6c 0%, transparent 36%),
+        radial-gradient(circle at 30% 28%, #382c56 0%, transparent 34%),
+        linear-gradient(135deg, #07090d, #111827 70%, #080a0e);
+}
+
+/* Área cinematográfica superior */
+body::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 18% 0;
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(0,0,0,.08) 0%,
+            rgba(0,0,0,.10) 45%,
+            rgba(7,9,13,.72) 82%,
+            #07090d 100%
+        );
+    pointer-events: none;
+}
+
+header {
+    position: relative;
+    z-index: 2;
+    height: 145px;
+    padding: 36px 58px 10px;
+}
+
+.clock {
+    font-size: 52px;
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -2px;
+    text-shadow: 0 3px 15px rgba(0,0,0,.75);
+}
+
+.date {
+    margin-top: 8px;
+    font-size: 18px;
+    opacity: .82;
+    text-transform: capitalize;
+    text-shadow: 0 2px 10px rgba(0,0,0,.8);
+}
+
+main {
+    position: absolute;
+    z-index: 3;
+    left: 0;
+    right: 0;
+    bottom: 14px;
+    padding: 0 50px;
+}
+
+h2 {
+    margin: 0 0 8px 4px;
+    font-size: 23px;
+    font-weight: 600;
+    text-shadow: 0 2px 10px rgba(0,0,0,.85);
+}
+
+.apps {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.app {
+    appearance: none;
+    width: 174px;
+    height: 118px;
+    flex: 0 0 174px;
+
+    border-radius: 20px;
+    border: 3px solid transparent;
+
+    background: rgba(22,27,38,.90);
+    color: white;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 10px 30px rgba(0,0,0,.48),
+        inset 0 1px rgba(255,255,255,.06);
+
+    transition:
+        transform .16s ease,
+        border-color .16s ease,
+        background .16s ease,
+        box-shadow .16s ease;
+}
+
+.app .icon {
+    height: 50px;
+    font-size: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.app .name {
+    margin-top: 7px;
+    font-size: 16px;
+    font-weight: 650;
+    white-space: nowrap;
+}
+
+.app:focus {
+    outline: none;
+    transform: translateY(-7px) scale(1.11);
+
+    border-color: rgba(255,255,255,.98);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(64,106,166,.98),
+            rgba(39,66,110,.98)
+        );
+
+    box-shadow:
+        0 18px 42px rgba(0,0,0,.65),
+        0 0 27px rgba(95,170,255,.52);
+}
+
+.footer {
+    position: fixed;
+    right: 27px;
+    bottom: 12px;
+    opacity: .28;
+    font-size: 11px;
+}
+
+/* ===== LAYOUT FINAL SMART TV ===== */
+
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+/* Não cria mais aquela faixa preta gigante */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        transparent 58%,
+        rgba(4,7,12,.18) 70%,
+        rgba(4,7,12,.68) 87%,
+        rgba(4,7,12,.92) 100%
+    );
+}
+
+/* Relógio fica por cima do fundo */
+header {
+    position: relative;
+    z-index: 3;
+}
+
+/* Apps grudados na parte inferior */
+main {
+    position: absolute;
+    z-index: 4;
+    left: 0;
+    right: 0;
+    bottom: 20px;
+    padding: 0 50px;
+}
+
+/* Título logo acima dos cards */
+h2 {
+    margin: 0 0 12px 4px;
+    font-size: 24px;
+}
+
+/* Uma única fileira */
+.apps {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 14px;
+    width: 100%;
+}
+
+/* Cards aproveitando praticamente toda a largura */
+.app {
+    width: 100%;
+    height: 124px;
+    min-width: 0;
+    flex: none;
+    border-radius: 19px;
+}
+
+/* Selecionado */
+.app:focus {
+    transform: translateY(-7px) scale(1.045);
+}
+
+/* Rodapé quase invisível */
+.footer {
+    bottom: 5px;
+    right: 12px;
+    font-size: 9px;
+    opacity: .18;
+}
+
+
+.wallpaper-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transform: scale(1.035);
+    transition: opacity 1.8s ease, transform 14s linear;
+}
+
+.wallpaper-layer.active {
+    opacity: 1;
+    transform: scale(1);
+}
+
+header {
+    position: relative;
+    z-index: 3;
+}
+
+main {
+    position: absolute;
+    z-index: 4;
+}
+
+.footer {
+    position: fixed;
+    z-index: 5;
+}
+
+
+/* ===== ICONES REAIS DOS APPS ===== */
+
+.app .icon {
+    width: 72px;
+    height: 62px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+}
+
+.app .icon img {
+    max-width: 64px;
+    max-height: 58px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+}
+
+/* Destaque estilo Smart TV */
+.app {
+    transition:
+        transform .18s ease,
+        border-color .18s ease,
+        background .18s ease,
+        box-shadow .18s ease;
+}
+
+.app:hover,
+.app:focus {
+    outline: none;
+    transform: translateY(-14px) scale(1.07);
+    border-color: rgba(255,255,255,.98);
+    background: rgba(30,48,78,.96);
+    box-shadow:
+        0 22px 46px rgba(0,0,0,.68),
+        0 0 30px rgba(90,165,255,.65);
+}
+
+
+/* ===== DESTAQUE FINAL DOS CARDS ===== */
+
+.apps {
+    overflow: visible !important;
+}
+
+.app {
+    position: relative;
+    z-index: 1;
+    transform-origin: center bottom;
+}
+
+.app:hover,
+.app:focus {
+    z-index: 20 !important;
+    transform: translateY(-18px) scale(1.09) !important;
+    border-color: #ffffff !important;
+    background: rgba(35, 62, 105, .98) !important;
+    box-shadow:
+        0 24px 48px rgba(0,0,0,.72),
+        0 0 0 2px rgba(255,255,255,.20),
+        0 0 34px rgba(95,170,255,.85) !important;
+}
+
+.app:hover .icon img,
+.app:focus .icon img {
+    transform: scale(1.07);
+}
+
+.app .icon img {
+    transition: transform .18s ease;
+}
+
+
+/* ===== ESCOLHA DO SERVIDOR JELLYFIN ===== */
+
+.jellyfin-chooser {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, .72);
+    backdrop-filter: blur(10px);
+}
+
+.jellyfin-chooser.hidden {
+    display: none;
+}
+
+.jellyfin-box {
+    width: min(680px, 82vw);
+    padding: 34px;
+    border-radius: 28px;
+    background: rgba(20, 20, 28, .96);
+    box-shadow: 0 20px 80px rgba(0, 0, 0, .55);
+}
+
+.jellyfin-box h2 {
+    margin: 0 0 28px;
+    text-align: center;
+    font-size: 32px;
+}
+
+.jellyfin-options {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.jellyfin-option {
+    border: 3px solid transparent;
+    border-radius: 20px;
+    padding: 22px 26px;
+    font: inherit;
+    font-size: 24px;
+    text-align: left;
+    color: white;
+    background: rgba(255, 255, 255, .09);
+}
+
+.jellyfin-option.selected {
+    border-color: white;
+    background: rgba(255, 255, 255, .22);
+    transform: scale(1.025);
+}
+
+.jellyfin-hint {
+    margin-top: 24px;
+    text-align: center;
+    opacity: .65;
+    font-size: 16px;
+}
+
+</style>
+</head>
+
+<body>
+<div class="wallpaper-layer active" id="wallpaperA"></div>
+<div class="wallpaper-layer" id="wallpaperB"></div>
+
+<header>
+    <div class="clock" id="clock">--:--</div>
+    <div class="date" id="date"></div>
+</header>
+
+<main>
+    <h2>Minha TV</h2>
+
+    <div class="apps">
+
+        <button class="app" data-app="iptv" tabindex="1">
+            <div class="icon"><img src="icons/iptv.png" alt="IPTV"></div>
+            <div class="name">IPTV</div>
+        </button>
+
+        <button class="app" data-app="netflix" tabindex="2">
+            <div class="icon"><img src="icons/netflix.png" alt="Netflix"></div>
+            <div class="name">Netflix</div>
+        </button>
+
+        <button class="app" data-app="prime" tabindex="3">
+            <div class="icon"><img src="icons/prime.png" alt="Prime Video"></div>
+            <div class="name">Prime Video</div>
+        </button>
+
+        <button class="app" data-app="disney" tabindex="4">
+            <div class="icon"><img src="icons/disney.png" alt="Disney+"></div>
+            <div class="name">Disney+</div>
+        </button>
+
+        <button class="app" data-app="freetube" tabindex="5">
+            <div class="icon"><img src="icons/youtube.png" alt="YouTube"></div>
+            <div class="name">YouTube</div>
+        </button>
+
+        <button class="app" data-app="jellyfin" tabindex="6">
+            <div class="icon"><img src="icons/jellyfin.png" alt="Jellyfin"></div>
+            <div class="name">Jellyfin</div>
+        </button>
+
+        <button class="app" data-app="spotify" tabindex="7">
+            <div class="icon"><img src="icons/spotify.png" alt="Spotify"></div>
+            <div class="name">Spotify</div>
+        </button>
+
+        <button class="app" data-app="firefox" tabindex="8">
+            <div class="icon"><img src="icons/internet.png" alt="Internet"></div>
+            <div class="name">Internet</div>
+        </button>
+
+
+    </div>
+</main>
+
+<div class="footer">Modo TV • Linux</div>
+
+
+<div id="jellyfinChooser" class="jellyfin-chooser hidden">
+    <div class="jellyfin-box">
+        <h2>🎬 Escolher servidor Jellyfin</h2>
+
+        <div class="jellyfin-options">
+            <button class="jellyfin-option selected"
+                    data-server="jellyfin_primary">
+                🎬 Servidor principal
+            </button>
+
+            <button class="jellyfin-option"
+                    data-server="jellyfin_secondary">
+                🎬 Servidor secundário
+            </button>
+        </div>
+
+        <div class="jellyfin-hint">
+            ↑ ↓ para escolher • OK para abrir • Voltar para cancelar
+        </div>
+    </div>
+</div>
+
+<script src="wallpapers.js"></script>
+<script>
+/* ===== WALLPAPERS ROTATIVOS ===== */
+
+const listaWallpapers =
+    Array.isArray(window.MODO_TV_WALLPAPERS)
+    ? [...window.MODO_TV_WALLPAPERS]
+    : [];
+
+function embaralhar(lista) {
+    for (let i = lista.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [lista[i], lista[j]] = [lista[j], lista[i]];
+    }
+}
+
+embaralhar(listaWallpapers);
+
+let wallpaperIndice = 0;
+let wallpaperCamada = 0;
+
+const wallpaperA = document.getElementById("wallpaperA");
+const wallpaperB = document.getElementById("wallpaperB");
+
+function trocarWallpaper() {
+    if (!listaWallpapers.length) return;
+
+    const arquivo =
+        listaWallpapers[wallpaperIndice % listaWallpapers.length];
+
+    wallpaperIndice++;
+
+    if (wallpaperIndice % listaWallpapers.length === 0) {
+        embaralhar(listaWallpapers);
+    }
+
+    const nova = wallpaperCamada === 0 ? wallpaperB : wallpaperA;
+    const antiga = wallpaperCamada === 0 ? wallpaperA : wallpaperB;
+
+    const imagem = new Image();
+
+    imagem.onload = () => {
+        nova.style.backgroundImage =
+            `url("wallpapers/${encodeURIComponent(arquivo)}")`;
+
+        nova.classList.add("active");
+        antiga.classList.remove("active");
+
+        wallpaperCamada = wallpaperCamada === 0 ? 1 : 0;
+    };
+
+    imagem.src =
+        "wallpapers/" + encodeURIComponent(arquivo);
+}
+
+trocarWallpaper();
+setInterval(trocarWallpaper, 18000);
+
+</script>
+<script>
+function atualizarRelogio() {
+    const agora = new Date();
+
+    document.getElementById("clock").textContent =
+        agora.toLocaleTimeString("pt-BR", {
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+
+    document.getElementById("date").textContent =
+        agora.toLocaleDateString("pt-BR", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric"
+        });
+}
+
+atualizarRelogio();
+setInterval(atualizarRelogio, 1000);
+
+const apps = [...document.querySelectorAll(".app")];
+
+const jellyfinChooser = document.getElementById("jellyfinChooser");
+const jellyfinOpcoes = [...document.querySelectorAll(".jellyfin-option")];
+
+let jellyfinModalAberto = false;
+let jellyfinSelecionado = 0;
+
+function atualizarEscolhaJellyfin() {
+    jellyfinOpcoes.forEach((opcao, i) => {
+        opcao.classList.toggle("selected", i === jellyfinSelecionado);
+    });
+}
+
+function abrirEscolhaJellyfin() {
+    jellyfinSelecionado = 0;
+    atualizarEscolhaJellyfin();
+    jellyfinChooser.classList.remove("hidden");
+    jellyfinModalAberto = true;
+}
+
+function fecharEscolhaJellyfin() {
+    jellyfinChooser.classList.add("hidden");
+    jellyfinModalAberto = false;
+    focar();
+}
+
+jellyfinOpcoes.forEach((opcao, i) => {
+    opcao.addEventListener("click", () => {
+        jellyfinSelecionado = i;
+        atualizarEscolhaJellyfin();
+        abrirApp(opcao.dataset.server);
+        fecharEscolhaJellyfin();
+    });
+});
+
+let selecionado = 0;
+let ultimoComando = 0;
+
+const colunas = 4;
+
+function focar() {
+    apps[selecionado].focus();
+}
+
+async function abrirApp(app) {
+    try {
+        await fetch(
+            "/launch?app=" + encodeURIComponent(app),
+            { cache: "no-store" }
+        );
+    } catch (e) {
+        console.error("Erro ao abrir app:", e);
+    }
+}
+
+apps.forEach((app, index) => {
+    app.addEventListener("focus", () => {
+        selecionado = index;
+    });
+
+    app.addEventListener("click", () => {
+        selecionado = index;
+
+        if (app.dataset.app === "jellyfin") {
+            abrirEscolhaJellyfin();
+            return;
+        }
+
+        abrirApp(app.dataset.app);
+    });
+});
+
+function executarComando(cmd) {
+
+    if (jellyfinModalAberto) {
+        switch (cmd) {
+            case "down":
+            case "right":
+                jellyfinSelecionado =
+                    Math.min(jellyfinSelecionado + 1, jellyfinOpcoes.length - 1);
+                atualizarEscolhaJellyfin();
+                break;
+
+            case "up":
+            case "left":
+                jellyfinSelecionado =
+                    Math.max(jellyfinSelecionado - 1, 0);
+                atualizarEscolhaJellyfin();
+                break;
+
+            case "ok":
+                abrirApp(
+                    jellyfinOpcoes[jellyfinSelecionado].dataset.server
+                );
+                fecharEscolhaJellyfin();
+                break;
+
+            case "back":
+            case "home":
+                fecharEscolhaJellyfin();
+                break;
+        }
+
+        return;
+    }
+
+    switch (cmd) {
+
+        case "right":
+            selecionado =
+                Math.min(selecionado + 1, apps.length - 1);
+            focar();
+            break;
+
+        case "left":
+            selecionado =
+                Math.max(selecionado - 1, 0);
+            focar();
+            break;
+
+        case "down":
+            selecionado =
+                Math.min(selecionado + colunas, apps.length - 1);
+            focar();
+            break;
+
+        case "up":
+            selecionado =
+                Math.max(selecionado - colunas, 0);
+            focar();
+            break;
+
+        case "ok":
+            apps[selecionado].click();
+            break;
+
+        case "home":
+            selecionado = 0;
+            focar();
+            break;
+
+        case "back":
+            selecionado = 0;
+            focar();
+            break;
+    }
+}
+
+document.addEventListener("keydown", e => {
+    const mapa = {
+        "ArrowRight": "right",
+        "ArrowLeft": "left",
+        "ArrowDown": "down",
+        "ArrowUp": "up",
+        "Enter": "ok",
+        "Escape": "back",
+        "Home": "home"
+    };
+
+    if (mapa[e.key]) {
+        e.preventDefault();
+        executarComando(mapa[e.key]);
+    }
+});
+
+async function consultarControle() {
+    try {
+        const resposta =
+            await fetch(
+                "/poll?after=" + ultimoComando,
+                { cache: "no-store" }
+            );
+
+        const comandos = await resposta.json();
+
+        for (const item of comandos) {
+            ultimoComando =
+                Math.max(ultimoComando, item.id);
+
+            executarComando(item.cmd);
+        }
+
+    } catch (e) {
+        // servidor temporariamente indisponível
+    }
+
+    setTimeout(consultarControle, 120);
+}
+
+focar();
+consultarControle();
+</script>
+
+</body>
+</html>

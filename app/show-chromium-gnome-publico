@@ -1,0 +1,42 @@
+#!/bin/bash
+MODO_TV_PORT="$(python3 "$(dirname "${BASH_SOURCE[0]}")/ler-config.py" server.port)" || exit 1
+
+set -u
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CACHE_DIR="$SCRIPT_DIR/dados-publicos/cache"
+PROFILE="$SCRIPT_DIR/dados-publicos/chromium-profile"
+mkdir -p "$CACHE_DIR" "$PROFILE"
+LOG="$CACHE_DIR/modo-tv-chromium-gnome.log"
+
+# Encerra somente o Chromium associado ao perfil público.
+while IFS= read -r pid; do
+    [[ "$pid" =~ ^[0-9]+$ ]] || continue
+    [ "$pid" -gt 1 ] || continue
+    [ -r "/proc/$pid/cmdline" ] || continue
+
+    cmdline="$(tr '\0' ' ' < "/proc/$pid/cmdline")"
+
+    if [[ "$cmdline" == *chromium* ]] && [[ "$cmdline" == *"$PROFILE"* ]]; then
+        kill -TERM "$pid" 2>/dev/null || true
+    fi
+done < <(pgrep -u "$(id -u)" -f 'chromium-profile' || true)
+sleep 1
+
+nohup flatpak run org.chromium.Chromium \
+    --user-data-dir="$PROFILE" \
+    --start-fullscreen \
+    >"$LOG" 2>&1 &
+
+for _ in $(seq 1 60); do
+    if pgrep -af 'org.chromium.Chromium' >/dev/null 2>&1; then
+        curl -fsS \
+            "http://127.0.0.1:${MODO_TV_PORT}/activate?app=firefox" \
+            >/dev/null 2>&1 || true
+        exit 0
+    fi
+
+    sleep 0.25
+done
+
+exit 1

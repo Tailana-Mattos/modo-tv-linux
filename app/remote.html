@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Controle Modo TV</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    margin: 0;
+    min-height: 100%;
+    background:
+        radial-gradient(circle at top, #17213c 0, #0a0f1c 44%, #05070c 100%);
+    color: #fff;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    padding: 18px 12px 28px;
+}
+
+.remote {
+    width: min(100%, 430px);
+}
+
+.top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.brand {
+    text-align: left;
+}
+
+.brand h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.brand small {
+    color: #98a6c5;
+}
+
+.status {
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #14253d;
+    color: #78e6a7;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.panel {
+    background: rgba(15, 22, 37, .88);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 28px;
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 14px 40px rgba(0,0,0,.25);
+}
+
+.section-title {
+    font-size: 12px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #7886a6;
+    text-align: left;
+    margin: 0 0 12px 4px;
+}
+
+button {
+    border: 0;
+    color: white;
+    background: linear-gradient(180deg,#26344e,#1b263c);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.08),
+        0 5px 12px rgba(0,0,0,.20);
+    touch-action: manipulation;
+    user-select: none;
+}
+
+button:active {
+    transform: scale(.94);
+    filter: brightness(1.22);
+}
+
+button:disabled {
+    opacity: .35;
+    transform: none;
+}
+
+.top-actions {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 10px;
+}
+
+.top-actions button {
+    min-height: 62px;
+    border-radius: 20px;
+    font-size: 23px;
+}
+
+.top-actions span {
+    display: block;
+    font-size: 11px;
+    margin-top: 4px;
+    color: #b8c1d6;
+}
+
+.apps {
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap: 9px;
+}
+
+.app {
+    min-height: 66px;
+    border-radius: 18px;
+    padding: 8px 5px;
+    font-size: 21px;
+}
+
+.app span {
+    display: block;
+    margin-top: 5px;
+    font-size: 10px;
+    color: #c6cede;
+    white-space: nowrap;
+}
+
+.dpad-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 4px 0;
+}
+
+.dpad {
+    width: 280px;
+    height: 280px;
+    position: relative;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at center,#202d47 0 30%,#11192a 31% 100%);
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,.06),
+        0 16px 28px rgba(0,0,0,.30);
+}
+
+.dpad button {
+    position: absolute;
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    font-size: 30px;
+    background: transparent;
+    box-shadow: none;
+}
+
+.dpad .up {
+    top: 8px;
+    left: 101px;
+}
+
+.dpad .down {
+    bottom: 8px;
+    left: 101px;
+}
+
+.dpad .left {
+    left: 8px;
+    top: 101px;
+}
+
+.dpad .right {
+    right: 8px;
+    top: 101px;
+}
+
+.dpad .ok {
+    width: 92px;
+    height: 92px;
+    left: 94px;
+    top: 94px;
+    background: linear-gradient(180deg,#426da9,#294d83);
+    font-size: 20px;
+    font-weight: 800;
+    box-shadow: 0 8px 20px rgba(0,0,0,.28);
+}
+
+.actions {
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+    gap: 10px;
+}
+
+.actions button {
+    min-height: 58px;
+    border-radius: 19px;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.touchpad {
+    height: 210px;
+    border-radius: 24px;
+    border: 1px solid rgba(255,255,255,.09);
+    background:
+        radial-gradient(circle at center,rgba(74,104,154,.16),transparent 55%),
+        #0c1322;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8491ac;
+    text-align: center;
+    padding: 30px;
+    font-size: 14px;
+}
+
+.touchpad strong {
+    display: block;
+    color: #d5dced;
+    font-size: 17px;
+    margin-bottom: 7px;
+}
+
+.keyboard {
+    width: 100%;
+    min-height: 58px;
+    border-radius: 19px;
+    font-size: 16px;
+    font-weight: 750;
+}
+
+.note {
+    text-align: center;
+    color: #6f7c98;
+    font-size: 11px;
+    margin-top: 12px;
+}
+</style>
+</head>
+
+<body>
+<div class="remote">
+
+    <div class="top">
+        <div class="brand">
+            <h1>📺 Modo TV</h1>
+            <small>Controle remoto</small>
+        </div>
+        <div class="status" id="tvStatus">● verificando...</div>
+    </div>
+
+    <div class="panel">
+        <div class="top-actions">
+            <button onclick="powerTV()">⏻<span>Power</span></button>
+            <button onclick="homeTV()">🏠<span>Minha TV</span></button>
+            <button onclick="volumeTV('mute')">🔇<span>Mudo</span></button>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="section-title">Aplicativos</div>
+
+        <div class="apps">
+            <button class="app" onclick="launch('iptv')">📡<span>IPTV</span></button>
+            <button class="app" onclick="launch('netflix')">N<span>Netflix</span></button>
+            <button class="app" onclick="launch('prime')">▶<span>Prime</span></button>
+            <button class="app" onclick="launch('disney')">✦<span>Disney+</span></button>
+            <button class="app" onclick="launch('freetube')">▶<span>YouTube</span></button>
+
+            <button class="app" onclick="launch('jellyfin')">🎬<span>Jellyfin</span></button>
+            <button class="app" onclick="launch('spotify')">♫<span>Spotify</span></button>
+            
+            <button class="app" onclick="launch('firefox')">🌐<span>Internet</span></button>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="section-title">Navegação</div>
+
+        <div class="dpad-wrap">
+            <div class="dpad">
+                <button class="up" onclick="cmd('up')">▲</button>
+                <button class="left" onclick="cmd('left')">◀</button>
+                <button class="ok" onclick="cmd('ok')">OK</button>
+                <button class="right" onclick="cmd('right')">▶</button>
+                <button class="down" onclick="cmd('down')">▼</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="actions">
+            <button onclick="cmd('back')">↩ Voltar</button>
+            <button onclick="playPause()">⏯ Play / Pause</button>
+            <button onclick="closeApp()">✕ Fechar app</button>
+            <button onclick="volumeTV('up')">🔊 Volume +</button>
+            <button onclick="volumeTV('down')">🔉 Volume −</button>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="section-title">Mouse da TV</div>
+
+        <div class="touchpad" id="touchpad">
+            <div>
+                <strong>🖱 Touchpad</strong>
+                Arraste para mover • toque para clicar<br>
+                dois dedos para rolar
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <button class="keyboard" onclick="toggleKeyboard()">⌨️ Teclado da TV</button>
+
+        <div id="keyboardPanel" style="
+            display:none;
+            margin-top:12px;
+            padding:12px;
+            border-radius:18px;
+            background:#0c1322;
+        ">
+            <input
+                id="tvText"
+                type="text"
+                placeholder="Digite para a TV..."
+                autocomplete="off"
+                style="
+                    width:100%;
+                    border:0;
+                    outline:none;
+                    border-radius:15px;
+                    padding:15px;
+                    font-size:17px;
+                    background:#202b44;
+                    color:white;
+                "
+            >
+
+            <div style="
+                display:grid;
+                grid-template-columns:1fr 1fr 1fr;
+                gap:8px;
+                margin-top:10px;
+            ">
+                <button onclick="sendTVText()" style="min-height:48px;border-radius:14px">
+                    Enviar
+                </button>
+
+                <button onclick="tvKey('backspace')" style="min-height:48px;border-radius:14px">
+                    ⌫
+                </button>
+
+                <button onclick="tvKey('enter')" style="min-height:48px;border-radius:14px">
+                    Enter
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="note">
+        Modo TV • Linux
+    </div>
+
+</div>
+
+<script>
+function cmd(c) {
+    fetch(
+        '/control?cmd=' + encodeURIComponent(c),
+        {cache:'no-store'}
+    ).catch(()=>{});
+}
+
+
+let pad = null;
+let lastX = 0;
+let lastY = 0;
+let startX = 0;
+let startY = 0;
+let startTime = 0;
+let moved = false;
+let scrolling = false;
+
+let pendingDX = 0;
+let pendingDY = 0;
+let pendingScroll = 0;
+let flushTimer = null;
+
+function prepareMouse() {
+    fetch('/mouse-start', {cache:'no-store'}).catch(()=>{});
+}
+
+function flushMouse() {
+    flushTimer = null;
+
+    if (scrolling) {
+        if (Math.abs(pendingScroll) >= 4) {
+            const amount = Math.max(-5, Math.min(5, Math.round(-pendingScroll / 12)));
+
+            if (amount !== 0) {
+                fetch(
+                    '/wheel?dy=' + encodeURIComponent(amount),
+                    {cache:'no-store'}
+                ).catch(()=>{});
+            }
+        }
+
+        pendingScroll = 0;
+        pendingDX = 0;
+        pendingDY = 0;
+        return;
+    }
+
+    const dx = Math.round(pendingDX);
+    const dy = Math.round(pendingDY);
+
+    pendingDX = 0;
+    pendingDY = 0;
+
+    if (dx === 0 && dy === 0) return;
+
+    fetch(
+        '/mouse?dx=' + encodeURIComponent(dx) +
+        '&dy=' + encodeURIComponent(dy),
+        {cache:'no-store'}
+    ).catch(()=>{});
+}
+
+function scheduleFlush() {
+    if (flushTimer !== null) return;
+
+    flushTimer = setTimeout(flushMouse, 32);
+}
+
+function mouseClick() {
+    fetch('/click', {cache:'no-store'}).catch(()=>{});
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    pad = document.getElementById('touchpad');
+    pad.style.touchAction = 'none';
+
+    pad.addEventListener('touchstart', e => {
+        e.preventDefault();
+
+        prepareMouse();
+
+        scrolling = e.touches.length >= 2;
+
+        const t = e.touches[0];
+
+        lastX = startX = t.clientX;
+        lastY = startY = t.clientY;
+
+        startTime = Date.now();
+        moved = false;
+
+        pendingDX = 0;
+        pendingDY = 0;
+        pendingScroll = 0;
+    }, {passive:false});
+
+    pad.addEventListener('touchmove', e => {
+        e.preventDefault();
+
+        const t = e.touches[0];
+
+        const dx = t.clientX - lastX;
+        const dy = t.clientY - lastY;
+
+        lastX = t.clientX;
+        lastY = t.clientY;
+
+        if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+            moved = true;
+        }
+
+        if (scrolling || e.touches.length >= 2) {
+            scrolling = true;
+            pendingScroll += dy;
+            scheduleFlush();
+            return;
+        }
+
+        /* Sensibilidade do ponteiro */
+        pendingDX += dx * 1.55;
+        pendingDY += dy * 1.55;
+
+        scheduleFlush();
+    }, {passive:false});
+
+    pad.addEventListener('touchend', e => {
+        e.preventDefault();
+
+        if (flushTimer !== null) {
+            clearTimeout(flushTimer);
+            flushTimer = null;
+            flushMouse();
+        }
+
+        const elapsed = Date.now() - startTime;
+        const dist =
+            Math.abs(lastX - startX) +
+            Math.abs(lastY - startY);
+
+        if (!scrolling && !moved && dist < 8 && elapsed < 350) {
+            mouseClick();
+        }
+
+        pendingDX = 0;
+        pendingDY = 0;
+        pendingScroll = 0;
+        scrolling = false;
+    }, {passive:false});
+});
+
+function toggleKeyboard() {
+    const panel = document.getElementById('keyboardPanel');
+    const input = document.getElementById('tvText');
+
+    const abrir = panel.style.display === 'none';
+
+    panel.style.display = abrir ? 'block' : 'none';
+
+    if (abrir) {
+        setTimeout(() => input.focus(), 80);
+    }
+}
+
+function sendTVText() {
+    const input = document.getElementById('tvText');
+    const text = input.value;
+
+    if (!text) return;
+
+    fetch(
+        '/type?text=' + encodeURIComponent(text),
+        {cache:'no-store'}
+    ).then(r => {
+        if (r.ok) {
+            input.value = '';
+        }
+    }).catch(()=>{});
+}
+
+function tvKey(key) {
+    fetch(
+        '/key?key=' + encodeURIComponent(key),
+        {cache:'no-store'}
+    ).catch(()=>{});
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('tvText');
+
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            sendTVText();
+            setTimeout(() => tvKey('enter'), 120);
+        }
+    });
+});
+
+function volumeTV(action) {
+    fetch(
+        '/volume?action=' + encodeURIComponent(action),
+        {cache:'no-store'}
+    ).catch(()=>{});
+}
+
+function playPause() {
+    fetch('/playpause', {cache:'no-store'}).catch(()=>{});
+}
+
+
+const APP_LABELS = {
+    home: "Home",
+    freetube: "YouTube",
+    youtube: "YouTube",
+    jellyfin: "Jellyfin",
+    netflix: "Netflix",
+    prime: "Prime Video",
+    disney: "Disney+",
+    spotify: "Spotify",
+    firefox: "Internet",
+    iptv: "IPTV"
+};
+
+async function updateTVStatus() {
+    const el = document.getElementById('tvStatus');
+    if (!el) return;
+
+    try {
+        const r = await fetch('/status', {cache:'no-store'});
+        if (!r.ok) throw new Error('status');
+
+        const st = await r.json();
+
+        if (!st.power) {
+            el.textContent = '○ TV desligada';
+            el.style.color = '#aeb7ca';
+            el.style.background = '#20283a';
+            return;
+        }
+
+        const app = APP_LABELS[st.app] || st.app || 'Home';
+
+        el.textContent = '● TV ligada · ' + app;
+        el.style.color = '#78e6a7';
+        el.style.background = '#14253d';
+
+    } catch (e) {
+        el.textContent = '● sem conexão';
+        el.style.color = '#ff9b9b';
+        el.style.background = '#3a1e28';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateTVStatus();
+    setInterval(updateTVStatus, 1000);
+});
+
+
+function powerTV() {
+    fetch('/power', {cache:'no-store'})
+        .catch(()=>{});
+}
+
+function closeApp() {
+    fetch('/close', {cache:'no-store'}).catch(()=>{});
+}
+
+function homeTV() {
+    fetch('/home', {cache:'no-store'}).catch(()=>{});
+}
+
+function launch(app) {
+    fetch(
+        '/launch?app=' + encodeURIComponent(app),
+        {cache:'no-store'}
+    ).catch(()=>{});
+}
+</script>
+</body>
+</html>

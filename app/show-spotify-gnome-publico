@@ -1,0 +1,40 @@
+#!/bin/bash
+MODO_TV_PORT="$(python3 "$(dirname "${BASH_SOURCE[0]}")/ler-config.py" server.port)" || exit 1
+
+set -u
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CACHE_DIR="$SCRIPT_DIR/dados-publicos/cache"
+mkdir -p "$CACHE_DIR"
+LOG="$CACHE_DIR/modo-tv-spotify-gnome.log"
+
+flatpak kill com.spotify.Client 2>/dev/null || true
+sleep 1
+
+nohup flatpak run com.spotify.Client \
+    >"$LOG" 2>&1 &
+
+PID=""
+
+for _ in $(seq 1 60); do
+    PID="$(pgrep -o -f '^/app/extra/share/spotify/spotify$')"
+
+    if [ -n "$PID" ]; then
+        break
+    fi
+
+    sleep 0.25
+done
+
+[ -n "$PID" ] || exit 1
+
+sleep 3
+
+# F11 coloca a janela recém-aberta em tela cheia.
+ydotool key "87:1" "87:0" >/dev/null 2>&1 || true
+
+curl -fsS \
+    "http://127.0.0.1:${MODO_TV_PORT}/activate?app=spotify" \
+    >/dev/null 2>&1 || true
+
+exit 0

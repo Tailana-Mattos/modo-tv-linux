@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# No GNOME, o Modo TV utiliza uma única tela e mantém
+# o aplicativo atual em primeiro plano. Não é necessário
+# manipular janelas externamente antes de enviar as teclas.
+
+case "${1:-}" in
+    freetube|youtube|netflix|prime|disney|jellyfin_primary|jellyfin_secondary|iptv|spotify|firefox|brave)
+        exit 0
+        ;;
+    *)
+        exit 1
+        ;;
+esac

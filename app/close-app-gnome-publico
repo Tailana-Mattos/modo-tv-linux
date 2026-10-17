@@ -1,0 +1,48 @@
+#!/bin/bash
+
+set -u
+
+APP="${1:-home}"
+
+case "$APP" in
+    freetube|youtube|netflix|prime|disney|jellyfin|jellyfin_primary|jellyfin_secondary|iptv)
+      while IFS= read -r pid; do
+          [[ "$pid" =~ ^[0-9]+$ ]] || continue
+          [ "$pid" -gt 1 ] || continue
+          [ -r "/proc/$pid/cmdline" ] || continue
+
+          cmdline="$(tr '\\0' ' ' < "/proc/$pid/cmdline")"
+
+          if [[ "$cmdline" == *vivaldi* ]] &&
+             [[ "$cmdline" == *"/modo-tv-publico-webapps/"* ]]; then
+              kill -TERM "$pid" 2>/dev/null || true
+          fi
+      done < <(pgrep -u "$(id -u)" -f 'modo-tv-publico-webapps/' || true)
+
+        for _ in $(seq 1 20); do
+            if ! pgrep -af 'modo-tv-publico-webapps/' >/dev/null 2>&1; then
+                break
+            fi
+            sleep 0.25
+        done
+        ;;
+
+    firefox)
+        flatpak kill org.chromium.Chromium 2>/dev/null || true
+        ;;
+
+    spotify)
+        flatpak kill com.spotify.Client 2>/dev/null || true
+        ;;
+
+
+    home|"")
+        ;;
+
+    *)
+        echo "Aplicativo desconhecido: $APP"
+        exit 1
+        ;;
+esac
+
+exit 0

@@ -95,7 +95,7 @@ Durante o desenvolvimento, foram trabalhados desafios como:
 
 ## Documentação técnica
 
-Este repositório apresenta um estudo de caso do Modo TV Linux, com explicações sobre as soluções desenvolvidas e exemplos dos comandos utilizados.
+Este repositório reúne o código da versão pública do Modo TV Linux, a documentação técnica e as explicações sobre as soluções desenvolvidas.
 
 ### Guias disponíveis
 
@@ -116,7 +116,120 @@ O exemplo demonstra a construção parametrizada dos comandos `gdctl` para alter
 
 Por segurança, o script é demonstrativo: imprime os comandos, mas não modifica a configuração dos monitores.
 
-Este repositório apresenta documentação técnica e exemplos selecionados. Não é uma distribuição completa do sistema original.
+Este repositório também disponibiliza, na pasta `app/`, o código da versão pública do Modo TV Linux, adaptado para configuração em outros computadores com GNOME e Wayland.
+
+## Como configurar e executar
+
+O código da versão pública está disponível na pasta [`app/`](app/).
+
+### Requisitos
+
+- Linux com GNOME em sessão Wayland.
+- Python 3 e Bash.
+- `gdctl` para gerenciar os monitores.
+- `pactl` para controlar o áudio.
+- `ydotool` para comandos de teclado e mouse.
+- Firefox para a interface inicial.
+- Flatpak e os aplicativos desejados.
+
+### 1. Baixar o projeto
+
+```bash
+git clone https://github.com/Tailana-Mattos/modo-tv-linux.git
+cd modo-tv-linux/app
+```
+
+### 2. Criar a configuração
+
+```bash
+cp config.example.json config.json
+```
+
+Edite o arquivo `config.json` com os dados do seu computador.
+
+### 3. Identificar os monitores
+
+```bash
+gdctl show
+```
+
+Preencha `display.tv_output`, `display.tv_mode`, `display.pc_output`, `display.pc_mode` e `display.scale`.
+
+As resoluções devem seguir o formato `1920x1080@60.000`, utilizando modos suportados pelos monitores.
+
+### 4. Identificar os dispositivos de áudio
+
+```bash
+pactl list short cards
+pactl list short sinks
+pactl list cards
+```
+
+Preencha os campos da seção `audio` com os dispositivos e perfis correspondentes.
+
+### 5. Configurar os serviços
+
+Na seção `services`, informe os endereços dos servidores Jellyfin e IPTV, caso utilize esses recursos.
+
+### Observações
+
+A versão pública ainda não foi validada em outros computadores. Configure corretamente os monitores e o áudio antes de utilizar os comandos de alternância.
+
+### 6. Iniciar o servidor
+
+Dentro da pasta `app/`, execute:
+
+```bash
+python3 server-publico.py
+```
+
+O servidor permanecerá ativo nesse terminal. Para encerrá-lo, pressione `Ctrl+C`.
+
+### 7. Ligar e desligar o Modo TV
+
+Em outro terminal, dentro da pasta `app/`, execute:
+
+```bash
+bash modo-tv-gnome-publico ligar
+```
+
+Para retornar ao monitor principal:
+
+```bash
+bash modo-tv-gnome-publico desligar
+```
+
+Para consultar o estado:
+
+```bash
+bash modo-tv-gnome-publico status
+```
+
+### 8. Acessar o controle remoto pelo celular
+
+Para permitir acesso pelo celular, configure `server.host` como `0.0.0.0` no `config.json` antes de iniciar o servidor.
+
+Descubra o endereço IP local do computador:
+
+```bash
+hostname -I
+```
+
+Com o celular conectado à mesma rede local, abra no navegador:
+
+```text
+http://IP_DO_COMPUTADOR:8765/remote
+```
+
+Substitua `IP_DO_COMPUTADOR` pelo endereço IP do computador e `8765` pela porta configurada, caso tenha sido alterada.
+
+**Atenção:** o servidor não possui autenticação. Não exponha sua porta à internet nem utilize redes públicas ou não confiáveis.
+
+A versão pública ainda não foi validada em outros computadores.
+
+
+
+---
 
 ## Segurança e privacidade
 
@@ -137,7 +250,7 @@ O controle remoto envolve comandos que interagem com o sistema operacional. Qual
 
 Projeto pessoal funcional no ambiente original.
 
-Documentação técnica e exemplo Bash disponíveis para consulta.
+Código da versão pública disponível em `app/`, acompanhado de documentação técnica. A configuração e a execução em outros computadores ainda não foram validadas.
 
 ---
 

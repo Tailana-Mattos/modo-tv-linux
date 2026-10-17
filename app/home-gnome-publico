@@ -1,0 +1,49 @@
+#!/bin/bash
+
+set -u
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+ACTIVE_FILE="$SCRIPT_DIR/dados-publicos/cache/modo-tv-active-app"
+HOME_PROFILE="$SCRIPT_DIR/dados-publicos/firefox-profile"
+HOME_LOG="$SCRIPT_DIR/dados-publicos/cache/modo-tv-home.log"
+mkdir -p "$SCRIPT_DIR/dados-publicos/cache"
+MODO_TV_PORT="$(python3 "$SCRIPT_DIR/ler-config.py" server.port)" || exit 1
+HOME_TV="http://127.0.0.1:${MODO_TV_PORT}/tv"
+
+ACTIVE_APP="${1:-home}"
+
+
+"$SCRIPT_DIR/close-app-gnome-publico" "$ACTIVE_APP" \
+    >/dev/null 2>&1 || true
+
+sleep 0.5
+
+if ! pgrep -af "$HOME_PROFILE" >/dev/null 2>&1; then
+    mkdir -p "$HOME_PROFILE"
+    rm -f "$HOME_PROFILE/.parentlock" "$HOME_PROFILE/lock"
+
+    nohup firefox \
+        --no-remote \
+        --profile "$HOME_PROFILE" \
+        --kiosk \
+        "$HOME_TV" \
+        >"$HOME_LOG" 2>&1 &
+
+    HOME_PID=$!
+    FIREFOX_PID_FILE="$SCRIPT_DIR/dados-publicos/cache/modo-tv-firefox.pid"
+    FIREFOX_START_FILE="$SCRIPT_DIR/dados-publicos/cache/modo-tv-firefox.start"
+
+    printf '%s\n' "$HOME_PID" >"$FIREFOX_PID_FILE"
+
+    if [ -r "/proc/$HOME_PID/stat" ]; then
+        FIREFOX_START="$(sed 's/^.*) //' "/proc/$HOME_PID/stat" | awk '{print $20}')"
+        printf '%s\n' "$FIREFOX_START" >"$FIREFOX_START_FILE"
+    else
+        rm -f "$FIREFOX_START_FILE"
+    fi
+fi
+
+printf '%s\n' "home" >"$ACTIVE_FILE"
+
+exit 0

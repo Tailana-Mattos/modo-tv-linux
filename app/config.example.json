@@ -1,0 +1,26 @@
+{
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8765
+  },
+  "services": {
+    "jellyfin_primary_url": "http://SEU_IP_JELLYFIN:8096/",
+    "jellyfin_secondary_url": "",
+    "iptv_url": ""
+  },
+  "display": {
+    "tv_output": "",
+    "tv_mode": "",
+    "pc_output": "",
+    "pc_mode": "",
+    "scale": 1
+  },
+  "audio": {
+    "gpu_card": "",
+    "tv_profile": "",
+    "tv_sink": "",
+    "pc_sink": "",
+    "tv_volume": "50%",
+    "pc_profile": "pro-audio"
+  }
+}

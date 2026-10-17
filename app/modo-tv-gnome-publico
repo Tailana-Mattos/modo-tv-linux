@@ -1,0 +1,294 @@
+#!/bin/bash
+
+set -u
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+mkdir -p "$SCRIPT_DIR/dados-publicos/cache"
+CONFIG_READER="$SCRIPT_DIR/ler-config.py"
+MODO_TV_CONFIG="$SCRIPT_DIR/config.json"
+export MODO_TV_CONFIG
+
+config() {
+    python3 "$CONFIG_READER" "$1"
+}
+
+TV_OUTPUT="$(config display.tv_output)" || exit 1
+PC_OUTPUT="$(config display.pc_output)" || exit 1
+TV_MODE="$(config display.tv_mode)" || exit 1
+PC_MODE="$(config display.pc_mode)" || exit 1
+DISPLAY_SCALE="$(config display.scale)" || exit 1
+
+GPU_CARD="$(config audio.gpu_card)" || exit 1
+TV_PROFILE="$(config audio.tv_profile)" || exit 1
+PC_PROFILE="$(config audio.pc_profile)" || exit 1
+TV_SINK="$(config audio.tv_sink)" || exit 1
+PC_SINK="$(config audio.pc_sink)" || exit 1
+TV_VOLUME="$(config audio.tv_volume)" || exit 1
+
+MODO_TV_PORT="$(config server.port)" || exit 1
+HOME_TV="http://127.0.0.1:${MODO_TV_PORT}/tv"
+
+validar_configuracao() {
+    local chave valor
+
+    for chave in \
+        TV_OUTPUT PC_OUTPUT TV_MODE PC_MODE DISPLAY_SCALE \
+        GPU_CARD TV_PROFILE PC_PROFILE TV_SINK PC_SINK TV_VOLUME MODO_TV_PORT
+    do
+        valor="${!chave}"
+
+        if [ -z "$valor" ]; then
+            echo "Erro: configuração obrigatória ausente: $chave" >&2
+            return 1
+        fi
+    done
+
+    local modo
+
+    for modo in "$TV_MODE" "$PC_MODE"; do
+        if ! [[ "$modo" =~ ^[0-9]+x[0-9]+@[0-9]+([.][0-9]+)?$ ]]; then
+            echo "Erro: resolução inválida: $modo" >&2
+            echo "Use o formato 1920x1080@60.000." >&2
+            return 1
+        fi
+    done
+
+    if ! [[ "$DISPLAY_SCALE" =~ ^[0-9]+([.][0-9]+)?$ ]] ||
+       ! awk -v n="$DISPLAY_SCALE" 'BEGIN { exit !(n >= 0.5 && n <= 4) }'; then
+        echo "Erro: escala inválida. Use um valor entre 0.5 e 4." >&2
+        return 1
+    fi
+
+    if ! [[ "$TV_VOLUME" =~ ^([0-9]|[1-9][0-9]|100)%$ ]]; then
+        echo "Erro: volume inválido. Use de 0% a 100%." >&2
+        return 1
+    fi
+
+    if ! [[ "$MODO_TV_PORT" =~ ^[0-9]+$ ]] ||
+       ! awk -v n="$MODO_TV_PORT" 'BEGIN { exit !(n >= 1 && n <= 65535) }'; then
+        echo "Erro: porta inválida. Use de 1 a 65535." >&2
+        return 1
+    fi
+}
+
+HOME_PROFILE="$SCRIPT_DIR/dados-publicos/firefox-profile"
+HOME_LOG="$SCRIPT_DIR/dados-publicos/cache/modo-tv-home.log"
+
+wait_sink() {
+    local sink="$1"
+
+    for _ in $(seq 1 40); do
+        if pactl list short sinks 2>/dev/null |
+            awk '{print $2}' |
+            grep -Fxq "$sink"; then
+            return 0
+        fi
+        sleep 0.25
+    done
+
+    return 1
+}
+
+is_active() {
+    local output="$1"
+
+    gdctl show 2>/dev/null |
+        sed -n '/^Logical monitors:/,$p' |
+        grep -Fq "$output ("
+}
+
+display_tv() {
+    local tentativa
+
+    for tentativa in $(seq 1 5); do
+        gdctl set \
+            --logical-monitor --primary \
+            --monitor "$TV_OUTPUT" \
+            --mode "$TV_MODE" \
+            --scale "$DISPLAY_SCALE" \
+            --x 0 \
+            --y 0 \
+            >>"$SCRIPT_DIR/dados-publicos/cache/modo-tv-display-gnome.log" 2>&1 || true
+
+        sleep 1
+
+        if is_active "$TV_OUTPUT" && ! is_active "$PC_OUTPUT"; then
+            return 0
+        fi
+
+        echo "Tentativa $tentativa: configuração da TV não estabilizou." \
+            >>"$SCRIPT_DIR/dados-publicos/cache/modo-tv-display-gnome.log"
+    done
+
+    return 1
+}
+
+display_pc() {
+    local tentativa
+
+    for tentativa in $(seq 1 5); do
+        gdctl set \
+            --logical-monitor --primary \
+            --monitor "$PC_OUTPUT" \
+            --mode "$PC_MODE" \
+            --scale "$DISPLAY_SCALE" \
+            --x 0 \
+            --y 0 \
+            >>"$SCRIPT_DIR/dados-publicos/cache/modo-tv-display-gnome.log" 2>&1 || true
+
+        sleep 1
+
+        if is_active "$PC_OUTPUT" && ! is_active "$TV_OUTPUT"; then
+            return 0
+        fi
+
+        echo "Tentativa $tentativa: configuração do monitor principal não estabilizou." \
+            >>"$SCRIPT_DIR/dados-publicos/cache/modo-tv-display-gnome.log"
+    done
+
+    return 1
+}
+
+case "${1:-}" in
+    ligar)
+        validar_configuracao || exit 1
+        echo "Ligando Modo TV no GNOME..."
+
+        if ! display_tv; then
+            echo "Erro: não foi possível ativar a TV."
+            exit 1
+        fi
+
+        sleep 2
+
+        mkdir -p "$HOME_PROFILE" "$HOME/.cache"
+        rm -f "$HOME_PROFILE/.parentlock" "$HOME_PROFILE/lock"
+
+        nohup firefox \
+            --no-remote \
+            --profile "$HOME_PROFILE" \
+            --kiosk \
+            "$HOME_TV" \
+            >"$HOME_LOG" 2>&1 &
+
+        HOME_PID=$!
+        FIREFOX_PID_FILE="$SCRIPT_DIR/dados-publicos/cache/modo-tv-firefox.pid"
+        FIREFOX_START_FILE="$SCRIPT_DIR/dados-publicos/cache/modo-tv-firefox.start"
+
+        printf '%s\n' "$HOME_PID" >"$FIREFOX_PID_FILE"
+        if [ -r "/proc/$HOME_PID/stat" ]; then
+            FIREFOX_START="$(sed 's/^.*) //' "/proc/$HOME_PID/stat" | awk '{print $20}')"
+            printf '%s\n' "$FIREFOX_START" >"$FIREFOX_START_FILE"
+        else
+            rm -f "$FIREFOX_START_FILE"
+        fi
+        printf '%s\n' "home" >"$SCRIPT_DIR/dados-publicos/cache/modo-tv-active-app"
+
+        pactl set-card-profile "$GPU_CARD" "$TV_PROFILE"
+
+        if ! wait_sink "$TV_SINK"; then
+            echo "Erro: a saída de áudio da TV não apareceu."
+            exit 1
+        fi
+
+        pactl set-default-sink "$TV_SINK"
+        pactl set-sink-mute "$TV_SINK" 0
+        pactl set-sink-volume "$TV_SINK" "$TV_VOLUME"
+
+        touch "$SCRIPT_DIR/dados-publicos/cache/modo-tv-enabled"
+
+        echo "Modo TV ligado."
+        ;;
+
+    desligar)
+        validar_configuracao || exit 1
+        echo "Voltando para o PC..."
+
+        # Encerra os aplicativos usados no Modo TV.
+        flatpak kill org.chromium.Chromium 2>/dev/null || true
+        flatpak kill com.spotify.Client 2>/dev/null || true
+        # Encerra somente processos Vivaldi associados aos perfis do Modo TV.
+while IFS= read -r pid; do
+    [[ "$pid" =~ ^[0-9]+$ ]] || continue
+    [ "$pid" -gt 1 ] || continue
+    [ -r "/proc/$pid/cmdline" ] || continue
+
+    cmdline="$(tr '\0' ' ' < "/proc/$pid/cmdline")"
+
+    if [[ "$cmdline" == *vivaldi* ]] &&
+       [[ "$cmdline" == *"/modo-tv-publico-webapps/"* ]]; then
+        kill -TERM "$pid" 2>/dev/null || true
+    fi
+done < <(pgrep -u "$(id -u)" -f 'modo-tv-publico-webapps/' || true)
+
+        FIREFOX_PID_FILE="$SCRIPT_DIR/dados-publicos/cache/modo-tv-firefox.pid"
+        FIREFOX_START_FILE="$SCRIPT_DIR/dados-publicos/cache/modo-tv-firefox.start"
+
+        if [ -f "$FIREFOX_PID_FILE" ] && [ -f "$FIREFOX_START_FILE" ]; then
+            read -r FIREFOX_PID < "$FIREFOX_PID_FILE"
+            read -r FIREFOX_START_SAVED < "$FIREFOX_START_FILE"
+
+            if [[ "$FIREFOX_PID" =~ ^[0-9]+$ ]] &&
+               [ "$FIREFOX_PID" -gt 1 ] &&
+               [[ "$FIREFOX_START_SAVED" =~ ^[0-9]+$ ]] &&
+               [ -r "/proc/$FIREFOX_PID/stat" ] &&
+               [ -r "/proc/$FIREFOX_PID/cmdline" ]; then
+
+                FIREFOX_START_NOW="$(sed 's/^.*) //' "/proc/$FIREFOX_PID/stat" | awk '{print $20}')"
+                FIREFOX_CMD="$(tr '\0' ' ' < "/proc/$FIREFOX_PID/cmdline")"
+
+                if [ "$FIREFOX_START_NOW" = "$FIREFOX_START_SAVED" ] &&
+                   [[ "$FIREFOX_CMD" == *firefox* ]] &&
+                   [[ "$FIREFOX_CMD" == *"--profile $HOME_PROFILE"* ]]; then
+                    kill -TERM "$FIREFOX_PID" 2>/dev/null || true
+                else
+                    echo "Firefox não encerrado: identidade do processo não confirmada."
+                fi
+            fi
+        fi
+
+        rm -f "$FIREFOX_PID_FILE" "$FIREFOX_START_FILE"
+
+        if ! display_pc; then
+            echo "Erro: não foi possível restaurar o monitor principal."
+            exit 1
+        fi
+
+        sleep 2
+
+        pactl set-card-profile "$GPU_CARD" "$PC_PROFILE"
+
+        if ! wait_sink "$PC_SINK"; then
+            echo "Erro: as caixas de som do PC não apareceram."
+            exit 1
+        fi
+
+        pactl set-default-sink "$PC_SINK"
+        pactl set-sink-mute "$PC_SINK" 0
+
+        rm -f "$SCRIPT_DIR/dados-publicos/cache/modo-tv-enabled"
+
+        echo "Modo PC restaurado."
+        ;;
+
+    status)
+        echo "===== TELAS ====="
+        gdctl show
+
+        echo
+        echo "===== ÁUDIO PADRÃO ====="
+        pactl get-default-sink 2>/dev/null || echo "indisponível"
+
+        echo
+        if [ -e "$SCRIPT_DIR/dados-publicos/cache/modo-tv-enabled" ]; then
+            echo "Estado: Modo TV marcado como ligado"
+        else
+            echo "Estado: Modo TV marcado como desligado"
+        fi
+        ;;
+
+    *)
+        echo "Uso: $0 {ligar|desligar|status}"
+        exit 1
+        ;;
+esac

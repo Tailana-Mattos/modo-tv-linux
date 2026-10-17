@@ -1,0 +1,8 @@
+
+# Copias locais do Modo TV original
+.revisao-local/
+
+app/config.json
+app/dados-publicos/
+__pycache__/
+*.pyc
