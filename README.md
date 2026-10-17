@@ -4,6 +4,26 @@
 
 Estudo de caso de um projeto pessoal desenvolvido para transformar um computador Linux em uma central multimídia, utilizando uma televisão como segunda tela e um celular como controle remoto.
 
+## Demonstração visual
+
+### Apresentação do projeto
+
+As imagens abaixo são composições visuais baseadas nas interfaces reais do Modo TV Linux.
+
+![Apresentação da interface inicial do Modo TV](imagens/interface-modo-tv.png)
+
+![Apresentação do controle remoto e da arquitetura do sistema](imagens/controle-e-arquitetura.png)
+
+![Apresentação das funcionalidades do controle remoto](imagens/controle-remoto.png)
+
+### Capturas reais do controle remoto
+
+As imagens seguintes mostram a interface do controle remoto funcionando no navegador do celular.
+
+| Aplicativos e tela inicial | Touchpad e teclado | Navegação e controles |
+| --- | --- | --- |
+| ![Tela inicial do controle remoto](imagens/reais/controle-inicial.png) | ![Touchpad e teclado virtual](imagens/reais/controle-touchpad.jpg) | ![Navegação direcional](imagens/reais/controle-navegacao.png) |
+
 ## Objetivo
 
 Criar uma solução que permita alternar entre o ambiente de trabalho e um ambiente dedicado ao entretenimento, automatizando tarefas que normalmente exigiriam diversas configurações manuais.
