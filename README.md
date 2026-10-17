@@ -12,9 +12,16 @@ As imagens abaixo são composições visuais baseadas nas interfaces reais do Mo
 
 ![Apresentação da interface inicial do Modo TV](imagens/interface-modo-tv.png)
 
-![Apresentação do controle remoto e da arquitetura do sistema](imagens/controle-e-arquitetura.png)
-
-![Apresentação das funcionalidades do controle remoto](imagens/controle-remoto.png)
+<table>
+  <tr>
+    <td width="50%">
+      <img src="imagens/controle-e-arquitetura.png" alt="Controle remoto e arquitetura do sistema">
+    </td>
+    <td width="50%">
+      <img src="imagens/controle-remoto.png" alt="Funcionalidades do controle remoto">
+    </td>
+  </tr>
+</table>
 
 ### Capturas reais do controle remoto
 
